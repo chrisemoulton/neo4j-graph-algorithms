@@ -4,6 +4,7 @@ import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.api.HugeGraph;
 import org.neo4j.graphalgo.core.utils.dss.DisjointSetStruct;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
+import org.neo4j.graphalgo.core.utils.paged.HugeDisjointSetStruct;
 
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
@@ -41,13 +42,18 @@ public enum UnionFindAlgo {
                 int concurrency,
                 double threshold,
                 BiConsumer<String, Algorithm<?>> prepare) {
-            return run(
+            HugeParallelUnionFindQueue algo = new HugeParallelUnionFindQueue(
                     hugeGraph,
                     executor,
                     minBatchSize,
                     concurrency,
-                    threshold,
-                    prepare);
+                    tracker);
+            prepare.accept("CC(HugeParallelUnionFindQueue)", algo);
+            HugeDisjointSetStruct struct = Double.isFinite(threshold)
+                    ? algo.compute(threshold)
+                    : algo.compute();
+            algo.release();
+            return new DSSResult(struct);
         }
     },
     FORK_JOIN {
@@ -80,13 +86,17 @@ public enum UnionFindAlgo {
                 int concurrency,
                 double threshold,
                 BiConsumer<String, Algorithm<?>> prepare) {
-            return run(
+            HugeParallelUnionFindForkJoin algo = new HugeParallelUnionFindForkJoin(
                     hugeGraph,
-                    executor,
+                    tracker,
                     minBatchSize,
-                    concurrency,
-                    threshold,
-                    prepare);
+                    concurrency);
+            prepare.accept("CC(HugeParallelUnionFindForkJoin)", algo);
+            HugeDisjointSetStruct struct = Double.isFinite(threshold)
+                    ? algo.compute(threshold)
+                    : algo.compute();
+            algo.release();
+            return new DSSResult(struct);
         }
     },
     FJ_MERGE {
@@ -120,13 +130,18 @@ public enum UnionFindAlgo {
                 int concurrency,
                 double threshold,
                 BiConsumer<String, Algorithm<?>> prepare) {
-            return run(
+            HugeParallelUnionFindFJMerge algo = new HugeParallelUnionFindFJMerge(
                     hugeGraph,
                     executor,
+                    tracker,
                     minBatchSize,
-                    concurrency,
-                    threshold,
-                    prepare);
+                    concurrency);
+            prepare.accept("CC(HugeParallelUnionFindFJMerge)", algo);
+            HugeDisjointSetStruct struct = Double.isFinite(threshold)
+                    ? algo.compute(threshold)
+                    : algo.compute();
+            algo.release();
+            return new DSSResult(struct);
         }
     },
     SEQ {
@@ -156,13 +171,15 @@ public enum UnionFindAlgo {
                 int concurrency,
                 double threshold,
                 BiConsumer<String, Algorithm<?>> prepare) {
-            return run(
+            HugeGraphUnionFind algo = new HugeGraphUnionFind(
                     hugeGraph,
-                    executor,
-                    minBatchSize,
-                    concurrency,
-                    threshold,
-                    prepare);
+                    AllocationTracker.EMPTY);
+            prepare.accept("CC(HugeSequentialUnionFind)", algo);
+            HugeDisjointSetStruct struct = Double.isFinite(threshold)
+                    ? algo.compute(threshold)
+                    : algo.compute();
+            algo.release();
+            return new DSSResult(struct);
         }
     };
 

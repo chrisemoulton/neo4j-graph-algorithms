@@ -18,7 +18,65 @@ public enum UFBenchmarkCombination {
     HEAVY_QUEUE(GraphImpl.HEAVY, UnionFindAlgo.QUEUE),
     HEAVY_FORK_JOIN(GraphImpl.HEAVY, UnionFindAlgo.FORK_JOIN),
     HEAVY_FJ_MERGE(GraphImpl.HEAVY, UnionFindAlgo.FJ_MERGE),
-    HEAVY_SEQ(GraphImpl.HEAVY, UnionFindAlgo.SEQ);
+    HEAVY_SEQ(GraphImpl.HEAVY, UnionFindAlgo.SEQ),
+
+    HUGE_QUEUE(GraphImpl.HUGE, UnionFindAlgo.QUEUE),
+    HUGE_FORK_JOIN(GraphImpl.HUGE, UnionFindAlgo.FORK_JOIN),
+    HUGE_FJ_MERGE(GraphImpl.HUGE, UnionFindAlgo.FJ_MERGE),
+    HUGE_SEQ(GraphImpl.HUGE, UnionFindAlgo.SEQ),
+
+    HUGE_HUGE_QUEUE(GraphImpl.HUGE, UnionFindAlgo.QUEUE) {
+        @Override
+        public Object run(final Graph graph) {
+            return algo.runAny(
+                graph,
+                Pools.DEFAULT,
+                AllocationTracker.EMPTY,
+                (int) (graph.nodeCount() / Pools.DEFAULT_CONCURRENCY),
+                Pools.DEFAULT_CONCURRENCY,
+                Double.NaN,
+                NOTHING);
+        }
+    },
+    HUGE_HUGE_FORK_JOIN(GraphImpl.HUGE, UnionFindAlgo.FORK_JOIN) {
+        @Override
+        public Object run(final Graph graph) {
+            return algo.runAny(
+                graph,
+                Pools.DEFAULT,
+                AllocationTracker.EMPTY,
+                (int) (graph.nodeCount() / Pools.DEFAULT_CONCURRENCY),
+                Pools.DEFAULT_CONCURRENCY,
+                Double.NaN,
+                NOTHING);
+        }
+    },
+    HUGE_HUGE_FJ_MERGE(GraphImpl.HUGE, UnionFindAlgo.FJ_MERGE) {
+        @Override
+        public Object run(final Graph graph) {
+            return algo.runAny(
+                graph,
+                Pools.DEFAULT,
+                AllocationTracker.EMPTY,
+                (int) (graph.nodeCount() / Pools.DEFAULT_CONCURRENCY),
+                Pools.DEFAULT_CONCURRENCY,
+                Double.NaN,
+                NOTHING);
+        }
+    },
+    HUGE_HUGE_SEQ(GraphImpl.HUGE, UnionFindAlgo.SEQ) {
+        @Override
+        public Object run(final Graph graph) {
+            return algo.runAny(
+                graph,
+                Pools.DEFAULT,
+                AllocationTracker.EMPTY,
+                (int) (graph.nodeCount() / Pools.DEFAULT_CONCURRENCY),
+                Pools.DEFAULT_CONCURRENCY,
+                Double.NaN,
+                NOTHING);
+        }
+    };
 
     final GraphImpl graph;
     final UnionFindAlgo algo;

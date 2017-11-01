@@ -82,6 +82,7 @@ public class UnionFindProcIntegrationTest {
         return Arrays.asList(
                 new Object[]{"Heavy"},
                 new Object[]{"Light"},
+                new Object[]{"Huge"},
                 new Object[]{"Kernel"}
         );
     }

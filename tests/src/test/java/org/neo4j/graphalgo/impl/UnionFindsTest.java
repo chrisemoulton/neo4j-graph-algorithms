@@ -41,6 +41,7 @@ public class UnionFindsTest {
         return Arrays.asList(
                 new Object[]{HeavyGraphFactory.class, "Heavy"},
                 new Object[]{LightGraphFactory.class, "Light"},
+                new Object[]{HugeGraphFactory.class, "Huge"},
                 new Object[]{GraphViewFactory.class, "Kernel"}
         );
     }
