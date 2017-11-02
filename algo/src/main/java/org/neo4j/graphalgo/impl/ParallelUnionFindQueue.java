@@ -84,7 +84,7 @@ public class ParallelUnionFindQueue extends GraphUnionFindAlgo<Graph, DisjointSe
 
     @Override
     public DisjointSetStruct compute(double threshold) {
-        throw new IllegalArgumentException("Not yet implemented");
+        throw new IllegalArgumentException("Parallel UnionFind with threshold not implemented, please use either `concurrency:1` or one of the exp* variants of UnionFind");
     }
 
     private DisjointSetStruct getStruct(final BlockingQueue<DisjointSetStruct> queue) {

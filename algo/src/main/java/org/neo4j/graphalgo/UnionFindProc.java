@@ -63,11 +63,11 @@ public class UnionFindProc {
     }
 
     private UnionFindProcExec ufExec() {
-        return new  UnionFindProcExec(
+        return new UnionFindProcExec(
                 api,
                 log,
                 transaction,
-                UnionFindAlgo.QUEUE,
+                UnionFindAlgo.SEQ,
                 UnionFindAlgo.QUEUE
         );
     }

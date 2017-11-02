@@ -63,8 +63,8 @@ public class UnionFindProc2 {
                 api,
                 log,
                 transaction,
-                UnionFindAlgo.QUEUE,
-                UnionFindAlgo.SEQ
+                UnionFindAlgo.SEQ,
+                UnionFindAlgo.QUEUE
         );
     }
 }

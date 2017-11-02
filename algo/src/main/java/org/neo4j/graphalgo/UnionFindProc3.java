@@ -67,8 +67,8 @@ public class UnionFindProc3 {
                 api,
                 log,
                 transaction,
-                UnionFindAlgo.FJ_MERGE,
-                UnionFindAlgo.SEQ
+                UnionFindAlgo.SEQ,
+                UnionFindAlgo.FJ_MERGE
         );
     }
 }

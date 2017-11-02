@@ -67,8 +67,8 @@ public class UnionFindProc4 {
                 api,
                 log,
                 transaction,
-                UnionFindAlgo.FORK_JOIN,
-                UnionFindAlgo.SEQ
+                UnionFindAlgo.SEQ,
+                UnionFindAlgo.FORK_JOIN
         );
     }
 }
