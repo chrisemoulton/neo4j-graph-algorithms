@@ -11,6 +11,7 @@ import org.neo4j.graphalgo.api.WeightedRelationshipConsumer;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.HugeGraphFactory;
 import org.neo4j.graphalgo.core.lightweight.LightGraphFactory;
+import org.neo4j.graphalgo.core.neo4jview.GraphView;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.test.rule.ImpermanentDatabaseRule;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * @author mknblch
@@ -95,7 +97,9 @@ public class WeightMapImportTest {
         // which expects the GraphFactory to load OUTGOINGs before INCOMINGs
         //   (a)-[{w:1}]->(b)  |  (a)<-[{w:2}]-(b)  |  (b)-[{w:2}]->(a)  |  (b)<-[{w:1}]-(a)
         // therefore the final weight for in/outs of either a/b is 1,
-        // the weight of 2 is discarded
+        // the weight of 2 is discarded.
+        // This cannot be represented in the graph view
+        assumeFalse("GraphView is not able to represent the test case", graph instanceof GraphView);
 
         checkWeight(0, Direction.OUTGOING, 1.0);
         checkWeight(1, Direction.OUTGOING, 1.0);
