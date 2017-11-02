@@ -246,7 +246,7 @@ public class HugeGraphImpl implements HugeGraph {
         consumeNodes(node, cursor, (s, t) -> consumer.accept(
                 (int) s,
                 (int) t,
-                RawValues.combineIntInt((int) s, (int) t)));
+                RawValues.combineIntInt((int) t, (int) s)));
     }
 
     @Override

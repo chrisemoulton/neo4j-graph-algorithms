@@ -169,7 +169,7 @@ public class LightGraph implements Graph {
             final int node,
             final RelationshipConsumer consumer) {
         IntArray.Cursor cursor = cursor(node, inOffsets, inAdjacency);
-        consumeNodes(node, cursor, inCombiner, consumer);
+        consumeNodes(node, cursor, (t, h) -> RawValues.combineIntInt(h, t), consumer);
         inAdjacency.returnCursor(cursor);
     }
 
@@ -177,7 +177,7 @@ public class LightGraph implements Graph {
             final int node,
             final RelationshipConsumer consumer) {
         IntArray.Cursor cursor = cursor(node, outOffsets, outAdjacency);
-        consumeNodes(node, cursor, outCombiner, consumer);
+        consumeNodes(node, cursor, RawValues.OUTGOING, consumer);
         outAdjacency.returnCursor(cursor);
     }
 
@@ -185,7 +185,7 @@ public class LightGraph implements Graph {
             final int node,
             final WeightedRelationshipConsumer consumer) {
         IntArray.Cursor cursor = cursor(node, inOffsets, inAdjacency);
-        consumeNodes(node, cursor, inCombiner, consumer);
+        consumeNodes(node, cursor, (t, h) -> RawValues.combineIntInt(h, t), inCombiner, consumer);
         inAdjacency.returnCursor(cursor);
     }
 
@@ -193,7 +193,7 @@ public class LightGraph implements Graph {
             final int node,
             final WeightedRelationshipConsumer consumer) {
         IntArray.Cursor cursor = cursor(node, outOffsets, outAdjacency);
-        consumeNodes(node, cursor, outCombiner, consumer);
+        consumeNodes(node, cursor, RawValues.OUTGOING, outCombiner, consumer);
         outAdjacency.returnCursor(cursor);
     }
 
@@ -207,6 +207,7 @@ public class LightGraph implements Graph {
             int startNode,
             IntArray.Cursor cursor,
             IdCombiner relId,
+            IdCombiner weightId,
             WeightedRelationshipConsumer consumer) {
         //noinspection UnnecessaryLocalVariable – prefer access of local var in loop
         final WeightMapping weightMap = this.weightMapping;
@@ -221,7 +222,7 @@ public class LightGraph implements Graph {
                         startNode,
                         targetNode,
                         relationId,
-                        weightMap.get(relationId)
+                        weightMap.get(weightId.apply(startNode, targetNode))
                 );
             }
         }
