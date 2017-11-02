@@ -202,10 +202,62 @@ public class GraphView implements Graph {
         return idMapping.contains(nodeId);
     }
 
+    @Override
+    public double weightOf(final int sourceNodeId, final int targetNodeId) {
+        final long sourceId = toOriginalNodeId(sourceNodeId);
+        final long targetId = toOriginalNodeId(targetNodeId);
+
+        try {
+            return withinTransactionDouble(read -> {
+                final RelationshipIterator rels;
+                if (relationTypeId == StatementConstants.NO_SUCH_RELATIONSHIP_TYPE) {
+                    rels = read.nodeGetRelationships(sourceId, Direction.BOTH);
+                } else {
+                    rels = read.nodeGetRelationships(sourceId, Direction.BOTH, new int[] {relationTypeId});
+                }
+
+                final double defaultWeight = this.propertyDefaultWeight;
+                final double[] nodeWeight = {defaultWeight};
+                final boolean[] foundWeight = {false};
+                RelationshipVisitor<EntityNotFoundException> visitor = (relationshipId, typeId, startNodeId, endNodeId) -> {
+                    long otherNodeId = startNodeId == sourceId ? endNodeId : startNodeId;
+                    if (otherNodeId == targetId && idMapping.contains(otherNodeId)) {
+                        double weight = defaultWeight;
+                        if (read.relationshipHasProperty(relationshipId, propertyKey)) {
+                            Object value = read.relationshipGetProperty(relationshipId, propertyKey);
+                            weight = RawValues.extractValue(value, defaultWeight);
+                        }
+                        foundWeight[0] = true;
+                        nodeWeight[0] = weight;
+                    }
+                };
+
+                while (rels.hasNext() && !foundWeight[0]) {
+                    final long relId = rels.next();
+                    rels.relationshipVisit(relId, visitor);
+                }
+
+                return nodeWeight[0];
+            });
+        } catch (EntityNotFoundException e) {
+            throw Exceptions.launderedException(e);
+        }
+    }
+
     private int withinTransactionInt(ToIntFunction<ReadOperations> block) {
         try (final Transaction tx = db.beginTx();
              Statement statement = contextBridge.get()) {
             final int result = block.applyAsInt(statement.readOperations());
+            tx.success();
+            return result;
+        }
+    }
+
+    private <E extends Exception> double withinTransactionDouble(CheckedToDoubleFunction<ReadOperations, E> block)
+    throws E {
+        try (final Transaction tx = db.beginTx();
+             Statement statement = contextBridge.get()) {
+            final double result = block.applyAsDouble(statement.readOperations());
             tx.success();
             return result;
         }
@@ -231,6 +283,10 @@ public class GraphView implements Graph {
 
     private interface CheckedConsumer<T, E extends Exception> {
         void accept(T t) throws E;
+    }
+
+    private interface CheckedToDoubleFunction<T, E extends Exception> {
+        double applyAsDouble(T t) throws E;
     }
 
 

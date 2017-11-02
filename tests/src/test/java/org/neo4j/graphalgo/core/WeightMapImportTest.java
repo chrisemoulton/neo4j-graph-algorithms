@@ -3,12 +3,20 @@ package org.neo4j.graphalgo.core;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.neo4j.graphalgo.api.Graph;
+import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.api.WeightedRelationshipConsumer;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.huge.HugeGraphFactory;
+import org.neo4j.graphalgo.core.lightweight.LightGraphFactory;
+import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.test.rule.ImpermanentDatabaseRule;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.Matchers.closeTo;
@@ -17,7 +25,18 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author mknblch
  */
+@RunWith(Parameterized.class)
 public class WeightMapImportTest {
+
+    @Parameterized.Parameters(name = "{1}")
+    public static Collection<Object[]> data() {
+        return Arrays.<Object[]>asList(
+                new Object[]{HeavyGraphFactory.class, "heavy"},
+                new Object[]{LightGraphFactory.class, "light"},
+                new Object[]{HugeGraphFactory.class, "huge"},
+                new Object[]{GraphViewFactory.class, "view"}
+        );
+    }
 
     @Rule
     public ImpermanentDatabaseRule DB = new ImpermanentDatabaseRule();
@@ -25,7 +44,14 @@ public class WeightMapImportTest {
     @Rule
     public ErrorCollector collector = new ErrorCollector();
 
-    private HeavyGraph graph;
+    private Class<? extends GraphFactory> graphImpl;
+    private Graph graph;
+
+    public WeightMapImportTest(
+            Class<? extends GraphFactory> graphImpl,
+            String name) {
+        this.graphImpl = graphImpl;
+    }
 
     @Test
     public void testWeightsOfInterconnectedNodesWithOutgoing() {
@@ -66,8 +92,8 @@ public class WeightMapImportTest {
         setup("CREATE (a:N),(b:N) CREATE (a)-[:R{w:1}]->(b),(b)-[:R{w:2}]->(a)", Direction.BOTH);
 
         // loading both overwrites the weights in the following order,
-        // which is specific to HeavyGraphFactory
-        // a->b: 1  |  a<-b: 2  |  b->a: 2  |  b<-a: 1
+        // which expects the GraphFactory to load OUTGOINGs before INCOMINGs
+        //   (a)-[{w:1}]->(b)  |  (a)<-[{w:2}]-(b)  |  (b)-[{w:2}]->(a)  |  (b)<-[{w:1}]-(a)
         // therefore the final weight for in/outs of either a/b is 1,
         // the weight of 2 is discarded
 
@@ -100,13 +126,13 @@ public class WeightMapImportTest {
 
     private void setup(String cypher, Direction direction) {
         DB.execute(cypher);
-        graph = (HeavyGraph) new GraphLoader(DB)
+        graph = new GraphLoader(DB)
                 .withAnyRelationshipType()
                 .withAnyLabel()
                 .withoutNodeProperties()
                 .withDirection(direction)
                 .withRelationshipWeightsFromProperty("w", 0.0)
-                .load(HeavyGraphFactory.class);
+                .load(graphImpl);
     }
 
     private void checkWeight(int nodeId, Direction direction, double... expecteds) {

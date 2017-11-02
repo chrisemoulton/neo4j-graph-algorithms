@@ -10,7 +10,6 @@ import org.neo4j.graphdb.Direction;
 public class RawValues {
 
     public static final IdCombiner OUTGOING = RawValues::combineIntInt;
-    public static final IdCombiner INCOMING = RawValues::combineReverseIntInt;
     public static final IdCombiner BOTH = RawValues::combineSorted;
 
     /**
@@ -25,18 +24,6 @@ public class RawValues {
         return ((long) head << 32) | (long) tail & 0xFFFFFFFFL;
     }
 
-    /**
-     * shifts tail into the most significant 4 bytes of the long
-     * and places the head in the least significant bytes
-     *
-     * @param head an arbitrary int value
-     * @param tail an arbitrary int value
-     * @return combination of head and tail
-     */
-    public static long combineReverseIntInt(int head, int tail) {
-        return ((long) tail << 32) | (long) head & 0xFFFFFFFFL;
-    }
-
     public static long combineSorted(int head, int tail) {
         return head <= tail
                 ? combineIntInt(head, tail)
@@ -48,7 +35,7 @@ public class RawValues {
             case OUTGOING:
                 return combineIntInt(head, tail);
             case INCOMING:
-                return combineReverseIntInt(head, tail);
+                return combineIntInt(tail, head);
             case BOTH:
                 return combineSorted(head, tail);
             default:
@@ -57,16 +44,7 @@ public class RawValues {
     }
 
     public static IdCombiner combiner(Direction direction) {
-        switch (direction) {
-            case OUTGOING:
-                return OUTGOING;
-            case INCOMING:
-                return INCOMING;
-            case BOTH:
-                return BOTH;
-            default:
-                throw new IllegalArgumentException("Unkown direction: " + direction);
-        }
+        return (direction == Direction.BOTH) ? BOTH : OUTGOING;
     }
 
     /**

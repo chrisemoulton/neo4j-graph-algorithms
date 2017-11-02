@@ -15,7 +15,7 @@ import java.util.function.IntPredicate;
  *
  * @author mknblch
  */
-public class HeavyGraph implements Graph, RelationshipWeights, NodeWeights, NodeProperties {
+public class HeavyGraph implements Graph, NodeWeights, NodeProperties {
 
     private final IdMap nodeIdMap;
     private AdjacencyMatrix container;
