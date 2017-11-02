@@ -10,8 +10,8 @@ import org.neo4j.graphdb.Direction;
 public class RawValues {
 
     public static final IdCombiner OUTGOING = RawValues::combineIntInt;
-
-    public static final IdCombiner INCOMING = (s, e) -> RawValues.combineIntInt(e, s);
+    public static final IdCombiner INCOMING = RawValues::combineReverseIntInt;
+    public static final IdCombiner BOTH = RawValues::combineSorted;
 
     /**
      * shifts head into the most significant 4 bytes of the long
@@ -22,15 +22,51 @@ public class RawValues {
      * @return combination of head and tail
      */
     public static long combineIntInt(int head, int tail) {
-        return ((long) head << 32) | tail & 0xFFFFFFFFL;
+        return ((long) head << 32) | (long) tail & 0xFFFFFFFFL;
+    }
+
+    /**
+     * shifts tail into the most significant 4 bytes of the long
+     * and places the head in the least significant bytes
+     *
+     * @param head an arbitrary int value
+     * @param tail an arbitrary int value
+     * @return combination of head and tail
+     */
+    public static long combineReverseIntInt(int head, int tail) {
+        return ((long) tail << 32) | (long) head & 0xFFFFFFFFL;
+    }
+
+    public static long combineSorted(int head, int tail) {
+        return head <= tail
+                ? combineIntInt(head, tail)
+                : combineIntInt(tail, head);
     }
 
     public static long combineIntInt(Direction direction, int head, int tail) {
-        return direction == Direction.OUTGOING ? combineIntInt(head, tail) : combineIntInt(tail, head);
+        switch (direction) {
+            case OUTGOING:
+                return combineIntInt(head, tail);
+            case INCOMING:
+                return combineReverseIntInt(head, tail);
+            case BOTH:
+                return combineSorted(head, tail);
+            default:
+                throw new IllegalArgumentException("Unkown direction: " + direction);
+        }
     }
 
     public static IdCombiner combiner(Direction direction) {
-        return direction == Direction.OUTGOING ? OUTGOING : INCOMING;
+        switch (direction) {
+            case OUTGOING:
+                return OUTGOING;
+            case INCOMING:
+                return INCOMING;
+            case BOTH:
+                return BOTH;
+            default:
+                throw new IllegalArgumentException("Unkown direction: " + direction);
+        }
     }
 
     /**
